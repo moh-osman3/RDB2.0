@@ -59,6 +59,7 @@ Status* execute_DbOperator(DbOperator* query) {
             stat = create_table(query->operator_fields.create_operator.db, 
                                 query->operator_fields.create_operator.name, 
                                 query->operator_fields.create_operator.col_count);
+                printf("name of first table: %s\n", current_db->tables[0].name);
                                 
         }
     }
