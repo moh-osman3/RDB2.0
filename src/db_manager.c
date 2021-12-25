@@ -6,10 +6,23 @@
 Db *current_db;
 
 
-/* 
- * Here you will create a table object. The Status object can be used to return
- * to the caller that there was an error in table creation
+/*****************************************************************************
+ * -- create_table -- 
+ *
+ * This API call creates a new table in the database 
+ * 
+ * params:
+ *    db [in/out]       The database to add a table to
+ *    name [in]         The name of the table
+ *    num_columns [in]  The number of columns in the table
+ *
+ * Returns:
+ *    Status OK on success
+ *           ERROR on failure 
+ *
+ *****************************************************************************
  */
+ 
 Status create_table(Db* db,                 // IN
                     const char* name,       // IN
                     size_t num_columns)     // IN
@@ -63,8 +76,22 @@ Status create_table(Db* db,                 // IN
     return ret_status;
 }
 
-/* 
- * Similarly, this method is meant to create a database.
+
+/*****************************************************************************
+ * -- create_db -- 
+ *
+ * This API call creates a new database.  To start only one database will
+ * be supported.
+ * TODO: Support multiple databases 
+ * 
+ * params:
+ *    db_name [in]         The name of the database
+ *
+ * Returns:
+ *    Status OK on success
+ *           ERROR on failure 
+ *
+ *****************************************************************************
  */
 Status create_db(const char* db_name) {
     // void pattern for 'using' a variable to prevent compiler unused variable warning
