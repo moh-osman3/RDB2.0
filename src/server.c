@@ -44,11 +44,11 @@ Status* execute_DbOperator(DbOperator* query) {
     // as practice with something like valgrind and to develop intuition on memory leaks, find and fix the memory leak. 
     Status stat;
     stat.code = ERROR;
-    stat.error = "Query Invalid";
+    stat.error_message = "Query Invalid";
     if(query == NULL)
     {
         log_err("%s:%d: Query not valid\n", __FUNCTION__, __LINE__);
-        return stat;
+        return &stat;
     }
 
     if(query && query->type == CREATE){
@@ -58,12 +58,12 @@ Status* execute_DbOperator(DbOperator* query) {
         else if(query->operator_fields.create_operator.create_type == _TABLE){
             stat = create_table(query->operator_fields.create_operator.db, 
                                 query->operator_fields.create_operator.name, 
-                                query->operator_fields.create_operator.col_count, 
-                                &create_status);
+                                query->operator_fields.create_operator.col_count);
+                                
         }
     }
     free(query);
-    return "165";
+    return &stat;
 }
 
 /**

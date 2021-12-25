@@ -1,7 +1,7 @@
 /*
- * -- hashtable.c
+ * -- set.c
  *
- *  implements a hashtable library for C
+ *  implements a set library for C
  *
  */
 
@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "hashtable.h"
+#include "set.h"
 
 
 /******************************************************************************
@@ -20,8 +20,7 @@
  * From https://en.wikipedia.org/wiki/Jenkins_hash_function
  *
  * Params:
- * map [in/out]  hashtable to allocate space for
- * size [in]     number of "buckets"
+ * key [in]      key to be hashed 
  * 
  * Returns -1 on failure
  *          otherwise returns index
@@ -50,10 +49,10 @@ unsigned int hash(keyType key) // IN
  * -- allocate --
  *
  * This function is responsible for allocating space
- * for a new hashtable
+ * for a new set
  *
  * Params:
- * map [in/out]  hashtable to allocate space for
+ * map [in/out]  set to allocate space for
  * size [in]     number of "buckets"
  * 
  * Returns -1 on failure
@@ -62,16 +61,16 @@ unsigned int hash(keyType key) // IN
  ******************************************************************************
  */
 
-int allocate(hashtable **map,  // IN/OUT
+int allocate(set **map,        // IN/OUT
              int size)         // IN
 {
-    *map = malloc(sizeof(hashtable));
+    *map = malloc(sizeof(set));
 
     if (*map == NULL) {
         fprintf(stdout, "%s:%d: Out of memory\n", __FUNCTION__, __LINE__);
         return -1;
     }
-    (*map)->table = malloc(sizeof(ht_elt *) * size);
+    (*map)->table = malloc(sizeof(set_elt *) * size);
     (*map)->capacity = size;
     (*map)->num_elt = 0;
 
@@ -87,12 +86,11 @@ int allocate(hashtable **map,  // IN/OUT
  * -- insert --
  *
  * This function is responsible for inserting a key
- * into the hashtable
+ * into the set
  *
  * Params:
- * map [in/out]  hashtable to allocate space for
+ * map [in/out]  set of strings 
  * key [in]      key to be inserted
- * val [in]      value associated with the key
  *
  * Returns -1 on failure
  *          0 on success
@@ -100,35 +98,31 @@ int allocate(hashtable **map,  // IN/OUT
  ******************************************************************************
  */
 
-int insert(hashtable *map,  // IN/OUT
-           keyType key,     // IN
-           valType val)     // IN
+int insert(set *map,        // IN/OUT
+           keyType key)     // IN
 {
     int index = hash(key);
 
-    ht_elt *tmp = map->table[index];
+    set_elt *tmp = map->table[index];
 
     /*
-     * Check if key is already in the hashtable.
-     * If it is, replace the value.
+     * Check if key is already in the set.
      */
     while (tmp != NULL) {
         if (strcmp(tmp->key, key) == 0) {
-            tmp->val = val;
             return 0;
         }
         tmp = tmp->next;
     }
 
     tmp = map->table[index];
-    ht_elt *new_node = malloc(sizeof(ht_elt));
+    set_elt *new_node = malloc(sizeof(set_elt));
      
     if (new_node == NULL) {
         fprintf(stdout, "%s:%d: Out of memory\n", __FUNCTION__, __LINE__);
         return -1;
     }
     strcpy(new_node->key, key);
-    new_node->val = val;
 
     new_node->next = tmp;
 
@@ -140,36 +134,31 @@ int insert(hashtable *map,  // IN/OUT
 
 
 /****************************************************************************** 
- * -- get --
+ * -- is_present --
  *
- * This function is responsible for getting the value that
- * is associated with key.
+ * This function is responsible for checking if key is in the set
  *
  * Params:
- * map [in/out]  hashtable to allocate space for
- * key [in]      key of item to get
- * val [in/out]  place to store value
+ * map [in/out]  set of strings 
+ * key [in]      key of item to check
  *
- * Returns -1 on failure
- *          0 on success
+ * Returns -1 if element is not present 
+ *          0 if element is found
  *
  ******************************************************************************
  */
 
-int get(hashtable *map,  // IN
-        keyType key,     // IN
-        valType *val)    // IN/OUT
+int is_present(set *map,  // IN
+               keyType key)     // IN
 {
     int index = hash(key);
-    ht_elt *tmp = map->table[index];
+    set_elt *tmp = map->table[index];
 
     while (tmp != NULL) {
         if (strcmp(tmp->key, key) == 0) {
-            *val = tmp->val;
             return 0; 
         }
     }
-    *val = -1;
     return -1;
 }
 
@@ -178,10 +167,10 @@ int get(hashtable *map,  // IN
  * -- erase --
  *
  * This function is responsible for deleting a key
- * from the hashtable
+ * from the set 
  *
  * Params:
- * map [in/out]  hashtable to allocate space for
+ * map [in/out]  set of strings 
  * key [in]      key to delete 
  *
  * Returns -1 on failure
@@ -190,11 +179,11 @@ int get(hashtable *map,  // IN
  ******************************************************************************
  */
 
-int erase(hashtable *map, // IN/OUT
+int erase(set *map, // IN/OUT
           keyType key)    // IN
 {
     int index = hash(key);
-    ht_elt *tmp = map->table[index];
+    set_elt *tmp = map->table[index];
 
     if (tmp == NULL) {
         fprintf(stdout, "Unable to find key to delete\n");
@@ -202,7 +191,7 @@ int erase(hashtable *map, // IN/OUT
     }
 
     map->num_elt -= 1;
-    ht_elt *prev = tmp;
+    set_elt *prev = tmp;
     tmp = tmp->next;
     while (tmp != NULL) {
         
@@ -217,7 +206,11 @@ int erase(hashtable *map, // IN/OUT
         prev = prev->next;
     }
 
-    free(prev);
+    if (strcmp(map->table[index]->key, key) != 0) {
+        fprintf(stdout, "Unable to find key to delete\n");
+        return -1;
+    }
+    free(map->table[index]);
     map->table[index] = NULL;
     return 0;
 }
@@ -227,10 +220,10 @@ int erase(hashtable *map, // IN/OUT
  * -- deallocate --
  *
  * This function is responsible for deallocating all memory
- * associated with the hashtable.
+ * associated with the set.
  *
  * Params:
- * map [in/out]  hashtable to deallocate
+ * map [in/out]  set to deallocate
  *
  * Returns -1 on failure
  *          0 on success
@@ -238,7 +231,7 @@ int erase(hashtable *map, // IN/OUT
  ******************************************************************************
  */
 
-int deallocate(hashtable **map) // IN
+int deallocate(set **map) // IN
 {
     for (int i = 0; i < (*map)->capacity; i++) {
         free((*map)->table[i]);
