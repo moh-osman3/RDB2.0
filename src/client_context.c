@@ -1,4 +1,10 @@
+#include <string.h>
 #include "client_context.h"
+#include "hashtable.h"
+#include "utils.h"
+
+hashtable *table_ht;
+
 /* This is an example of a function you will need to
  * implement in your catalogue. It takes in a string (char *)
  * and outputs a pointer to a table object. Similar methods
@@ -7,10 +13,9 @@
  * 
  */
 Table* lookup_table(char *name) {
-	// void pattern for 'using' a variable to prevent compiler unused variable warning
-	(void) name;
-
-	return NULL;
+    int val;
+	get(table_ht, name, &val);
+	return &current_db->tables[val];
 }
 
 /**

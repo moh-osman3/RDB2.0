@@ -1,10 +1,64 @@
+#include "client_context.h"
 #include "cs165_api.h"
+#include "hashtable.h"
 #include "utils.h"
 #include <string.h>
 
 // only one active database at a time
 Db *current_db;
 
+/*****************************************************************************
+ * -- create_column -- 
+ *
+ * This API call creates a new table in the database 
+ * 
+ * params:
+ *    db [in/out]       The database to add a table to
+ *    name [in]         The name of the table
+ *    num_columns [in]  The number of columns in the table
+ *
+ * Returns:
+ *    Status OK on success
+ *           ERROR on failure 
+ *
+ *****************************************************************************
+ */
+
+Status create_column(Table *table,  // IN/OUT
+                     char *name)    // IN
+{
+    Status ret_status;
+    int name_length;
+
+    if (table == NULL ||
+        name == NULL) {
+        log_err("%s:%d: Unable to create column due to invalid inputs\n",
+                __FUNCTION__, __LINE__);
+    }
+    
+    name_length = strlen(table->name) + 1 + strlen(name);
+    ret_status.code = ERROR;
+    ret_status.error_message = QUERY_INVALID_STR;
+
+    if (name_length > MAX_SIZE_NAME) {
+        log_err("%s:%d: Column name is too long\n",
+                __FUNCTION__, __LINE__);
+        return ret_status;
+    }
+    if (sprintf(table->columns[table->col_count].name, "%s.%s", table->name, name) <= 0) {
+        log_err("%s:%d: Failed to copy column name\n",
+                __FUNCTION__, __LINE__);
+        return ret_status;
+    }
+
+    table->columns[table->col_count].data = NULL;
+    table->col_count += 1; 
+
+    ret_status.code = OK;
+    ret_status.error_message = SUCCESS_STR;
+    return ret_status;
+
+}
 
 /*****************************************************************************
  * -- create_table -- 
@@ -27,8 +81,8 @@ Status create_table(Db* db,                 // IN
                     const char* name,       // IN
                     size_t num_columns)     // IN
 {
-    int name_length = strlen(name);
-    int chars_to_copy = name_length < MAX_SIZE_NAME ? name_length : MAX_SIZE_NAME;
+    // int name_length = strlen(name);
+    // int chars_to_copy = name_length < MAX_SIZE_NAME ? name_length : MAX_SIZE_NAME;
     Status ret_status;
     ret_status.error_message = QUERY_INVALID_STR; 
     ret_status.code = ERROR;
@@ -49,6 +103,7 @@ Status create_table(Db* db,                 // IN
      * Make sure there is enough space in the current db for another table
      */
     if (current_db->tables == NULL) {
+        allocate(&table_ht, HT_SIZE);
         current_db->tables = malloc(sizeof(Table) * MAX_TABLES);
     }
 
@@ -57,20 +112,19 @@ Status create_table(Db* db,                 // IN
         current_db->tables = realloc(current_db->tables, current_db->tables_capacity);
     }
 
-    if (sprintf(&tb->name, "%s.%s", db->name, name) <= 0) {
+    if (sprintf(tb->name, "%s.%s", db->name, name) <= 0) {
         log_err("%s:%d: Failed to copy table name\n",
                 __FUNCTION__, __LINE__);
     };
-    
-    printf("name of tbl: %s\n", tb->name);
 
-    tb->col_count = num_columns;
+    tb->col_count = 0;
     tb->table_length = 0;
     tb->columns = malloc(sizeof(Column) * num_columns);
 
     db->tables[db->tables_size] = *tb;
-    db->tables_size += 1;
 
+    insert(table_ht, tb->name, db->tables_size); 
+    db->tables_size += 1;
     ret_status.code = OK;
     ret_status.error_message = SUCCESS_STR;
     return ret_status;

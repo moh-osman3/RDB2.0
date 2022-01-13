@@ -42,29 +42,31 @@
 Status* execute_DbOperator(DbOperator* query) {
     // there is a small memory leak here (when combined with other parts of your database.)
     // as practice with something like valgrind and to develop intuition on memory leaks, find and fix the memory leak. 
-    Status stat;
-    stat.code = ERROR;
-    stat.error_message = "Query Invalid";
+    Status *stat = malloc(sizeof(Status));
+    stat->code = ERROR;
+    stat->error_message = "Query Invalid";
     if(query == NULL)
     {
         log_err("%s:%d: Query not valid\n", __FUNCTION__, __LINE__);
-        return &stat;
+        return stat;
     }
 
     if(query && query->type == CREATE){
-        if(query->operator_fields.create_operator.create_type == _DB){
-            stat = create_db(query->operator_fields.create_operator.name);
-        }
-        else if(query->operator_fields.create_operator.create_type == _TABLE){
-            stat = create_table(query->operator_fields.create_operator.db, 
+        if (query->operator_fields.create_operator.create_type == _DB) {
+            *stat = create_db(query->operator_fields.create_operator.name);
+        } else if (query->operator_fields.create_operator.create_type == _TABLE) {
+            *stat = create_table(query->operator_fields.create_operator.db, 
                                 query->operator_fields.create_operator.name, 
                                 query->operator_fields.create_operator.col_count);
-                printf("name of first table: %s\n", current_db->tables[0].name);
                                 
-        }
+        } else if (query->operator_fields.create_operator.create_type == _COLUMN) {
+            *stat = create_column(query->operator_fields.create_operator.table,
+                                 query->operator_fields.create_operator.name);
+                
+        } 
     }
     free(query);
-    return &stat;
+    return stat;
 }
 
 /**
@@ -111,7 +113,9 @@ void handle_client(int client_socket) {
 
             // 2. Handle request
             //    Corresponding database operator is executed over the query
-            char* result = execute_DbOperator(query)->error_message;
+            Status *status = execute_DbOperator(query); 
+            char* result = status->error_message;
+            free(status);
 
             send_message.length = strlen(result);
             char send_buffer[send_message.length + 1];

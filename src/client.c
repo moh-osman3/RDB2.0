@@ -129,7 +129,6 @@ int main(void)
                     // Receive the payload and print it out
                     if ((len = recv(client_socket, payload, num_bytes, 0)) > 0) {
                         payload[num_bytes] = '\0';
-                        printf("%s\n", payload);
                     }
                 }
             }

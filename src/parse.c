@@ -32,6 +32,38 @@ char* next_token(char** tokenizer, message_status* status) {
     return token;
 }
 
+
+DbOperator* parse_create_col(char* create_arguments) {
+    message_status status = OK_DONE;
+    char** create_arguments_index = &create_arguments;
+    char* col_name = next_token(create_arguments_index, &status);
+    char* table_name = next_token(create_arguments_index, &status);
+
+    // not enough arguments
+    if (status == INCORRECT_FORMAT) {
+        return NULL;
+    }
+    // Get the col name free of quotation marks
+    table_name = trim_quotes(table_name);
+    // read and chop off last char, which should be a ')'
+    int last_char = strlen(table_name) - 1;
+    if (table_name[last_char] != ')') {
+        return NULL;
+    }
+    // replace the ')' with a null terminating character. 
+    table_name[last_char] = '\0';
+
+    // make create dbo for table
+    DbOperator* dbo = malloc(sizeof(DbOperator));
+    int *index_of_table;
+    dbo->type = CREATE;
+    dbo->operator_fields.create_operator.create_type = _COLUMN;
+    strcpy(dbo->operator_fields.create_operator.name, col_name);
+    dbo->operator_fields.create_operator.table = malloc(sizeof(Table));
+    dbo->operator_fields.create_operator.table = lookup_table(table_name); 
+    return dbo;
+}
+
 /**
  * This method takes in a string representing the arguments to create a table.
  * It parses those arguments, checks that they are valid, and creates a table.
@@ -139,6 +171,8 @@ DbOperator* parse_create(char* create_arguments) {
                 dbo = parse_create_db(tokenizer_copy);
             } else if (strcmp(token, "tbl") == 0) {
                 dbo = parse_create_tbl(tokenizer_copy);
+            } else if (strcmp(token, "col") == 0) {
+                dbo = parse_create_col(tokenizer_copy);
             } else {
                 mes_status = UNKNOWN_COMMAND;
             }
@@ -168,7 +202,7 @@ DbOperator* parse_insert(char* query_command, message* send_message) {
             return NULL;
         }
         // lookup the table and make sure it exists. 
-        Table* insert_table = lookup_table(table_name);
+        Table* insert_table = NULL; // lookup_table(table_name);
         if (insert_table == NULL) {
             send_message->status = OBJECT_NOT_FOUND;
             return NULL;

@@ -217,7 +217,11 @@ int erase(hashtable *map, // IN/OUT
         prev = prev->next;
     }
 
-    free(prev);
+    if (strcmp(map->table[index]->key, key) != 0) {
+        fprintf(stdout, "Unable to find key to delete\n");
+        return -1;
+    }
+    free(map->table[index]);
     map->table[index] = NULL;
     return 0;
 }

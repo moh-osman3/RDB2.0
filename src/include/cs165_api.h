@@ -271,7 +271,7 @@ Status create_db(const char* db_name);
 
 Status create_table(Db* db, const char* name, size_t num_columns);
 
-Column* create_column(Table *table, char *name, bool sorted, Status *ret_status);
+Status create_column(Table *table, char *name);
 
 Status shutdown_server();
 
