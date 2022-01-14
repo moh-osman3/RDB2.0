@@ -33,6 +33,7 @@ SOFTWARE.
 #define MAX_SIZE_NAME 64
 #define HANDLE_MAX_SIZE 64
 #define MAX_TABLES 100
+#define COLUMN_LENGTH 100
 #define QUERY_INVALID_STR "Query Invalid"
 #define OUT_OF_MEMORY_STR "Out of Memory"
 #define SUCCESS_STR "Success"
@@ -59,6 +60,8 @@ struct Comparator;
 typedef struct Column {
     char name[MAX_SIZE_NAME]; 
     int* data;
+    int data_length;
+    int capacity;
     // You will implement column indexes later. 
     void* index;
     //struct ColumnIndex *index;
@@ -84,6 +87,7 @@ typedef struct Table {
     char name [MAX_SIZE_NAME];
     Column *columns;
     size_t col_count;
+    size_t row_capacity;
     size_t table_length;
 } Table;
 
@@ -273,9 +277,12 @@ Status create_table(Db* db, const char* name, size_t num_columns);
 
 Status create_column(Table *table, char *name);
 
+Status relational_insert(Table *table, int *values);
+
 Status shutdown_server();
 
 char** execute_db_operator(DbOperator* query);
+
 void db_operator_free(DbOperator* query);
 
 

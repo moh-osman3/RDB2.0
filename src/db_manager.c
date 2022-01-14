@@ -8,9 +8,9 @@
 Db *current_db;
 
 /*****************************************************************************
- * -- create_column -- 
+ * -- relational_insert -- 
  *
- * This API call creates a new table in the database 
+ * This API call adds a new row of values to an existing Table 
  * 
  * params:
  *    db [in/out]       The database to add a table to
@@ -24,21 +24,81 @@ Db *current_db;
  *****************************************************************************
  */
 
+Status relational_insert(Table *table, int *values) {
+    Status ret_status;
+    int i;
+    int index_next = table->table_length;
+    ret_status.code = ERROR;
+    ret_status.error_message = QUERY_INVALID_STR;
+
+    if (table == NULL ||
+        values == NULL) {
+        log_err("%s:%d: Unable to insert row due to invalid inputs\n",
+                __FUNCTION__, __LINE__);
+        return ret_status;
+    }
+
+    for (i = 0; i < table->col_count; i++) {
+        if (table->columns[i].data == NULL) {
+            table->columns[i].data = malloc(sizeof(int) * COLUMN_LENGTH);
+            table->columns[i].data[index_next] = values[i];
+            // only need to set the row_capacity once
+            if (i == 0) {
+                table->row_capacity = COLUMN_LENGTH;
+            }
+
+        } else if (index_next >= table->row_capacity) {
+            // only need to increase row_capacity once
+            if (i == 0) {
+                table->row_capacity *= 2;
+            }
+            table->columns[i].data = realloc(table->columns[i].data, table->row_capacity);
+        }
+        
+        table->columns[i].data[index_next] = values[i];
+    }
+    table->table_length += 1;
+
+    ret_status.code = OK;
+    ret_status.error_message = SUCCESS_STR;
+
+    return ret_status;
+}
+
+
+
+/*****************************************************************************
+ * -- create_column -- 
+ *
+ * This API call creates a new table in the database 
+ * 
+ * params:
+ *    Table [in/out]    The table to add a column to 
+ *    name [in]         The name of the column
+ *
+ * Returns:
+ *    Status OK on success
+ *           ERROR on failure 
+ *
+ *****************************************************************************
+ */
+
 Status create_column(Table *table,  // IN/OUT
                      char *name)    // IN
 {
     Status ret_status;
     int name_length;
+    ret_status.code = ERROR;
+    ret_status.error_message = QUERY_INVALID_STR;
 
     if (table == NULL ||
         name == NULL) {
         log_err("%s:%d: Unable to create column due to invalid inputs\n",
                 __FUNCTION__, __LINE__);
+        return ret_status;
     }
     
     name_length = strlen(table->name) + 1 + strlen(name);
-    ret_status.code = ERROR;
-    ret_status.error_message = QUERY_INVALID_STR;
 
     if (name_length > MAX_SIZE_NAME) {
         log_err("%s:%d: Column name is too long\n",
@@ -59,6 +119,7 @@ Status create_column(Table *table,  // IN/OUT
     return ret_status;
 
 }
+
 
 /*****************************************************************************
  * -- create_table -- 
@@ -119,6 +180,7 @@ Status create_table(Db* db,                 // IN
 
     tb->col_count = 0;
     tb->table_length = 0;
+    tb->row_capacity = 0;
     tb->columns = malloc(sizeof(Column) * num_columns);
 
     db->tables[db->tables_size] = *tb;
@@ -147,6 +209,7 @@ Status create_table(Db* db,                 // IN
  *
  *****************************************************************************
  */
+
 Status create_db(const char* db_name) {
     // void pattern for 'using' a variable to prevent compiler unused variable warning
     struct Status ret_status;

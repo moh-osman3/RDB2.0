@@ -45,13 +45,13 @@ Status* execute_DbOperator(DbOperator* query) {
     Status *stat = malloc(sizeof(Status));
     stat->code = ERROR;
     stat->error_message = "Query Invalid";
-    if(query == NULL)
-    {
+
+    if (query == NULL) {
         log_err("%s:%d: Query not valid\n", __FUNCTION__, __LINE__);
         return stat;
     }
 
-    if(query && query->type == CREATE){
+    if (query->type == CREATE) {
         if (query->operator_fields.create_operator.create_type == _DB) {
             *stat = create_db(query->operator_fields.create_operator.name);
         } else if (query->operator_fields.create_operator.create_type == _TABLE) {
@@ -61,9 +61,17 @@ Status* execute_DbOperator(DbOperator* query) {
                                 
         } else if (query->operator_fields.create_operator.create_type == _COLUMN) {
             *stat = create_column(query->operator_fields.create_operator.table,
-                                 query->operator_fields.create_operator.name);
+                                  query->operator_fields.create_operator.name);
                 
         } 
+    } else if (query->type == INSERT) {
+        *stat = relational_insert(query->operator_fields.insert_operator.table,
+                                  query->operator_fields.insert_operator.values);
+        Table *tbl = query->operator_fields.insert_operator.table;
+
+        for (int i = 0; i < tbl->table_length; i++) {
+            printf("tbl item %i: %i\n", i, tbl->columns[0].data[i]);
+        }
     }
     free(query);
     return stat;

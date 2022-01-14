@@ -202,7 +202,7 @@ DbOperator* parse_insert(char* query_command, message* send_message) {
             return NULL;
         }
         // lookup the table and make sure it exists. 
-        Table* insert_table = NULL; // lookup_table(table_name);
+        Table* insert_table = lookup_table(table_name);
         if (insert_table == NULL) {
             send_message->status = OBJECT_NOT_FOUND;
             return NULL;
