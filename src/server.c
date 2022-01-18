@@ -69,9 +69,10 @@ Status* execute_DbOperator(DbOperator* query) {
                                   query->operator_fields.insert_operator.values);
         Table *tbl = query->operator_fields.insert_operator.table;
 
-        for (int i = 0; i < tbl->table_length; i++) {
-            printf("tbl item %i: %i\n", i, tbl->columns[0].data[i]);
+        for (size_t i = 0; i < tbl->table_length; i++) {
+            printf("tbl item %zu: %i\n", i, tbl->columns[0].data[i]);
         }
+    } else if (query->type == SELECT) {
     }
     free(query);
     return stat;

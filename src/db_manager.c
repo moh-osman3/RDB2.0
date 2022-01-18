@@ -26,8 +26,8 @@ Db *current_db;
 
 Status relational_insert(Table *table, int *values) {
     Status ret_status;
-    int i;
-    int index_next = table->table_length;
+    size_t i;
+    size_t index_next = table->table_length;
     ret_status.code = ERROR;
     ret_status.error_message = QUERY_INVALID_STR;
 

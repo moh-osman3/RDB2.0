@@ -7,6 +7,7 @@
 #define HT_SIZE 1000000
 
 Table* lookup_table(char *name);
+Column *lookup_column(char *tbl_name, char *col_name);
 
 extern hashtable *table_ht; 
 #endif

@@ -32,7 +32,7 @@
 unsigned int hash(keyType key) // IN
 {
     int length = strlen(key);
-    size_t i = 0;
+    int i = 0;
     unsigned int hash = 0;
     while (i != length) {
         hash += key[i++];

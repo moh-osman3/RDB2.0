@@ -204,6 +204,7 @@ typedef enum OperatorType {
     CREATE,
     INSERT,
     LOAD,
+    SELECT,
 } OperatorType;
 
 
@@ -241,6 +242,17 @@ typedef struct InsertOperator {
 typedef struct LoadOperator {
     char* file_name;
 } LoadOperator;
+
+/*
+ * necessary fields for select
+ */
+ typedef struct SelectOperator {
+     Column *col;
+     int lower;
+     int upper;
+ } SelectOperator;
+
+
 /*
  * union type holding the fields of any operator
  */
@@ -248,6 +260,7 @@ typedef union OperatorFields {
     CreateOperator create_operator;
     InsertOperator insert_operator;
     LoadOperator load_operator;
+    SelectOperator select_operator;
 } OperatorFields;
 /*
  * DbOperator holds the following fields:

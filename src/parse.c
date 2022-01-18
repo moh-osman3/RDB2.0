@@ -32,6 +32,45 @@ char* next_token(char** tokenizer, message_status* status) {
     return token;
 }
 
+DbOperator* parse_select(char *select_arguments) {
+    message_status status = OK_DONE;
+    char **select_arguments_index = &select_arguments;
+    char *col_name;
+    char *lower;
+    char *upper;
+    if (strncmp(select_arguments, "(", 1) == 0) {
+        select_arguments++;
+    }
+
+    col_name = next_token(select_arguments_index, &status);
+    lower = next_token(select_arguments_index, &status);
+    upper = next_token(select_arguments_index, &status);
+
+    log_info("%s:%d: params passed in %s, %s, %s\n", __FUNCTION__,
+             __LINE__, col_name, lower, upper);
+
+    if (status == INCORRECT_FORMAT) {
+        return NULL;
+    }
+
+    col_name = trim_quotes(col_name);
+
+    char *saveptr = col_name;
+    char *col_part = strrchr(col_name, '.');
+    col_part[0] = '\0';
+    col_part++;
+
+    DbOperator *dbo = malloc(sizeof(DbOperator));
+    dbo->type = SELECT;
+    Column *col = malloc(sizeof(Column));
+    col = lookup_column(saveptr, col_part);
+
+    dbo->operator_fields.select_operator.col = col;
+    dbo->operator_fields.select_operator.lower = atoi(lower);
+    dbo->operator_fields.select_operator.upper = atoi(upper);
+
+    return dbo;
+}
 
 DbOperator* parse_create_col(char* create_arguments) {
     message_status status = OK_DONE;
@@ -45,6 +84,7 @@ DbOperator* parse_create_col(char* create_arguments) {
     }
     // Get the col name free of quotation marks
     table_name = trim_quotes(table_name);
+    col_name = trim_quotes(col_name);
     // read and chop off last char, which should be a ')'
     int last_char = strlen(table_name) - 1;
     if (table_name[last_char] != ')') {
@@ -55,7 +95,6 @@ DbOperator* parse_create_col(char* create_arguments) {
 
     // make create dbo for table
     DbOperator* dbo = malloc(sizeof(DbOperator));
-    int *index_of_table;
     dbo->type = CREATE;
     dbo->operator_fields.create_operator.create_type = _COLUMN;
     strcpy(dbo->operator_fields.create_operator.name, col_name);
@@ -246,7 +285,7 @@ DbOperator* parse_command(char* query_command, message* send_message, int client
     // a second option is to malloc the dbo here (instead of inside the parse commands). Either way, you should track the dbo
     // and free it when the variable is no longer needed. 
     DbOperator *dbo = NULL; // = malloc(sizeof(DbOperator));
-
+    printf("enter parse command\n");
     if (strncmp(query_command, "--", 2) == 0) {
         send_message->status = OK_DONE;
         // The -- signifies a comment line, no operator needed.  
@@ -263,7 +302,7 @@ DbOperator* parse_command(char* query_command, message* send_message, int client
     } else {
         handle = NULL;
     }
-
+    
     cs165_log(stdout, "QUERY: %s\n", query_command);
 
     // by default, set the status to acknowledge receipt of command,
@@ -284,7 +323,11 @@ DbOperator* parse_command(char* query_command, message* send_message, int client
     } else if (strncmp(query_command, "relational_insert", 17) == 0) {
         query_command += 17;
         dbo = parse_insert(query_command, send_message);
-    }
+    } else if (strncmp(query_command, "select", 6) == 0) {
+        printf("select!!\n");
+        query_command += 6;
+        dbo = parse_select(query_command);
+    } 
     if (dbo == NULL) {
         return dbo;
     }
