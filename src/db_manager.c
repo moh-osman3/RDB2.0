@@ -4,6 +4,13 @@
 #include "utils.h"
 #include <string.h>
 
+/*
+ * bitvector macros from
+ * http://www.mathcs.emory.edu/~cheung/Courses/255/Syllabus/1-C-intro/bit-array.html
+ */
+#define SetBit(A,k)     ( A[(k/32)] |= (1 << (k%32)) )
+#define ClearBit(A,k)   ( A[(k/32)] &= ~(1 << (k%32)) )
+#define TestBit(A,k)    ( A[(k/32)] & (1 << (k%32)) )
 // only one active database at a time
 Db *current_db;
 

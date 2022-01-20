@@ -30,15 +30,20 @@
 
 #define DEFAULT_QUERY_BUFFER_SIZE 1024
 
-/** execute_DbOperator takes as input the DbOperator and executes the query.
- * This should be replaced in your implementation (and its implementation possibly moved to a different file).
- * It is currently here so that you can verify that your server and client can send messages.
+/*****************************************************************************
+ * -- execute_DbOperator --
  * 
- * Getting started hints: 
- *      What are the structural attributes of a `query`?
- *      How will you interpret different queries?
- *      How will you ensure different queries invoke different execution paths in your code?
- **/
+ * This function is responsible for running queries
+ *
+ * Params:
+ *    query [in]  pointer to DbOperator which contains query
+ *
+ * Returns:
+ *    Status OK on success
+ *           ERROR on failure
+ *****************************************************************************
+ */
+
 Status* execute_DbOperator(DbOperator* query) {
     // there is a small memory leak here (when combined with other parts of your database.)
     // as practice with something like valgrind and to develop intuition on memory leaks, find and fix the memory leak. 

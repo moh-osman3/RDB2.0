@@ -34,6 +34,7 @@ SOFTWARE.
 #define HANDLE_MAX_SIZE 64
 #define MAX_TABLES 100
 #define COLUMN_LENGTH 100
+#define C_HANDLE_LIMIT 100
 #define QUERY_INVALID_STR "Query Invalid"
 #define OUT_OF_MEMORY_STR "Out of Memory"
 #define SUCCESS_STR "Success"
@@ -179,7 +180,7 @@ typedef struct GeneralizedColumnHandle {
  * holds the information necessary to refer to generalized columns (results or columns)
  */
 typedef struct ClientContext {
-    GeneralizedColumnHandle* chandle_table;
+    Result* chandle_table;
     int chandles_in_use;
     int chandle_slots;
 } ClientContext;
